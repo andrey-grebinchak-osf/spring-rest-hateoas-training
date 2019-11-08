@@ -73,9 +73,9 @@ class EmployeeController {
     // end::get-single-item[]
 
     @PutMapping("/employees/{id}")
-    Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) {
+    ResponseEntity<?> replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id) throws URISyntaxException {
 
-        return repository.findById(id)
+        Employee updatedEmployee = repository.findById(id)
                 .map(employee -> {
                     employee.setName(newEmployee.getName());
                     employee.setRole(newEmployee.getRole());
@@ -85,10 +85,19 @@ class EmployeeController {
                     newEmployee.setId(id);
                     return repository.save(newEmployee);
                 });
+
+        Resource<Employee> resource = assembler.toResource(updatedEmployee);
+
+        return ResponseEntity
+                .created(new URI(resource.getId().expand().getHref()))
+                .body(resource);
     }
 
     @DeleteMapping("/employees/{id}")
-    void deleteEmployee(@PathVariable Long id) {
-        repository.deleteById(id);
+    ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
+
+      repository.deleteById(id);
+
+      return ResponseEntity.noContent().build();
     }
 }
